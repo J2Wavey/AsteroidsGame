@@ -39,7 +39,13 @@ public:
 			(*lit)->OnPlayerKilled(mLives);
 		}
 	}
-
+	void IncrementLives(int amount) {
+		mLives += amount;
+		// Notify all listeners about the change
+		for (auto& listener : mListeners) {
+			listener->OnPlayerLivesChanged(mLives); // You may need to create this method in the listener interface
+		}
+	}
 private:
 	int mLives;
 

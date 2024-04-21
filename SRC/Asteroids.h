@@ -13,6 +13,7 @@
 class GameObject;
 class Spaceship;
 class GUILabel;
+class Sprite;
 
 class Asteroids : public GameSession, public IKeyboardListener, public IGameWorldListener, public IScoreListener, public IPlayerListener
 {
@@ -52,6 +53,7 @@ private:
 	shared_ptr<GUILabel> mScoreLabel;
 	shared_ptr<GUILabel> mLivesLabel;
 	shared_ptr<GUILabel> mGameOverLabel;
+	shared_ptr<Sprite> mHealthPowerUpSprite;
 
 	uint mLevel;
 	uint mAsteroidCount;
@@ -60,7 +62,9 @@ private:
 	shared_ptr<GameObject> CreateSpaceship();
 	void CreateGUI();
 	void CreateAsteroids(const uint num_asteroids);
+	//void CreateHealthPowerUp();
 	shared_ptr<GameObject> CreateExplosion();
+	shared_ptr<GameObject> CreateHealthPowerUp();
 
 	const static uint SHOW_GAME_OVER = 0;
 	const static uint START_NEXT_LEVEL = 1;
@@ -68,6 +72,14 @@ private:
 
 	bool mGameStarted;
 	shared_ptr<GUILabel> mStartLabel;
+	shared_ptr<GUILabel> mTitleLabel;
+	shared_ptr<GUILabel> mChangeShipLabel;
+
+	// Inside the Asteroids class definition
+	shared_ptr<Sprite> mSpaceshipSprite1;
+	shared_ptr<Sprite> mSpaceshipSprite2;
+	shared_ptr<Sprite> mSpaceshipSprite3;
+
 
 	void InitializeStartScreen();
 	void StartGame();

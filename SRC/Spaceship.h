@@ -16,6 +16,8 @@ public:
 	virtual void Update(int t);
 	virtual void Render(void);
 
+	void IncreaseLives();
+
 	virtual void Thrust(float t);
 	virtual void Rotate(float r);
 	virtual void Shoot(void);
@@ -29,7 +31,7 @@ public:
 
 private:
 	float mThrust;
-
+	int mNumberOfLives;
 	shared_ptr<Shape> mSpaceshipShape;
 	shared_ptr<Shape> mThrusterShape;
 	shared_ptr<Shape> mBulletShape;

@@ -11,6 +11,7 @@
 #include "BoundingSphere.h"
 #include "GUILabel.h"
 #include "Explosion.h"
+#include "HealthPowerUp.h"
 
 // PUBLIC INSTANCE CONSTRUCTORS ///////////////////////////////////////////////
 
@@ -53,16 +54,31 @@ void Asteroids::Start()
 	Animation* explosion_anim = AnimationManager::GetInstance().CreateAnimationFromFile("explosion", 64, 1024, 64, 64, "explosion_fs.png");
 	Animation* asteroid1_anim = AnimationManager::GetInstance().CreateAnimationFromFile("asteroid1", 128, 8192, 128, 128, "asteroid1_fs.png");
 	Animation* spaceship_anim = AnimationManager::GetInstance().CreateAnimationFromFile("spaceship", 128, 128, 128, 128, "spaceship_fs.png");
+	mSpaceshipSprite1 = make_shared<Sprite>(spaceship_anim->GetWidth(), spaceship_anim->GetHeight(), spaceship_anim);
+	Animation* spaceship2_anim = AnimationManager::GetInstance().CreateAnimationFromFile("spaceship", 128, 128, 128, 128, "spaceship2_fs.png");
+	mSpaceshipSprite2 = make_shared<Sprite>(spaceship2_anim->GetWidth(), spaceship2_anim->GetHeight(), spaceship2_anim);
+
+	Animation* spaceship3_anim = AnimationManager::GetInstance().CreateAnimationFromFile("spaceship", 128, 128, 128, 128, "spaceship3_fs.png");
+	mSpaceshipSprite3 = make_shared<Sprite>(spaceship3_anim->GetWidth(), spaceship3_anim->GetHeight(), spaceship3_anim);
+
+	Animation* health_anim = AnimationManager::GetInstance().CreateAnimationFromFile("health", 48, 48, 48, 48, "health_fs.png");
+	shared_ptr<Sprite> healthPowerUpSprite = make_shared<Sprite>(health_anim->GetWidth(), health_anim->GetHeight(), health_anim);
+
+	// Store it for later use
+	mHealthPowerUpSprite = healthPowerUpSprite;
+
 
 	// Create a spaceship and add it to the world
 	mGameWorld->AddObject(CreateSpaceship());
 
+	mGameWorld->AddObject(CreateHealthPowerUp());
+	//shared_ptr<GameObject> healthPowerUp = CreateHealthPowerUp();
 	// Initialize the start screen label and make it visible
 	/*mStartLabel = make_shared<GUILabel>("Press X to Start");
 	mStartLabel->SetHorizontalAlignment(GUIComponent::GUI_HALIGN_CENTER);
 	mStartLabel->SetVerticalAlignment(GUIComponent::GUI_VALIGN_MIDDLE);*/
 	// Add the start screen label to the game display
-	mGameDisplay->GetContainer()->AddComponent(static_pointer_cast<GUIComponent>(mStartLabel), GLVector2f(0.5f, 0.5f));
+	mGameDisplay->GetContainer()->AddComponent(static_pointer_cast<GUIComponent>(mStartLabel), GLVector2f(0.5f, 0.9f));
 
 	// Set the flag that the game has not yet started
 	mGameStarted = false;
@@ -88,10 +104,35 @@ void Asteroids::InitializeStartScreen() {
 		mStartLabel->SetPosition(GLVector2i(labelX, labelY));
 		mStartLabel->SetColor(GLVector3f(1.0f, 1.0f, 1.0f)); // White color
 		mGameDisplay->GetContainer()->AddComponent(static_pointer_cast<GUIComponent>(mStartLabel), GLVector2f(0.5f, 0.5f + (static_cast<float>(labelOffsetY) / mGameDisplay->GetHeight())));
+
+		// Calculate the positions based on the screen height and set the labels accordingly
+		float screenHeight = mGameDisplay->GetHeight();
+
+		// Position for "Asteroids The Game" label, which is at the top 10% of the screen height
+		float asteroidsLabelYPos = screenHeight * 0.1f; // Changed from 0.1 to whatever is needed
+		mTitleLabel = make_shared<GUILabel>("Asteroids The Game"); // Create the title label
+		mTitleLabel->SetPosition(GLVector2i(mGameDisplay->GetWidth() / 2, asteroidsLabelYPos));
+		mTitleLabel->SetHorizontalAlignment(GUIComponent::GUI_HALIGN_CENTER);
+		mTitleLabel->SetVisible(true);
+		mGameDisplay->GetContainer()->AddComponent(static_pointer_cast<GUIComponent>(mTitleLabel), GLVector2f(0.5f, 0.1f));
+		if (!mChangeShipLabel) { // Only create the label if it hasn't been created already
+			mChangeShipLabel = make_shared<GUILabel>("Press S,A or D to change spaceship");
+			mChangeShipLabel->SetHorizontalAlignment(GUIComponent::GUI_HALIGN_CENTER);
+			mChangeShipLabel->SetVerticalAlignment(GUIComponent::GUI_VALIGN_MIDDLE);
+
+			// Set the label's position. Let's say we want it to be 20% from the top of the screen
+			float labelYPos = mGameDisplay->GetHeight() * 0.2f;
+			mChangeShipLabel->SetPosition(GLVector2i(mGameDisplay->GetWidth() / 2, labelYPos));
+			mChangeShipLabel->SetColor(GLVector3f(1.0f, 1.0f, 1.0f)); // Set color to white
+
+			// Add the label to the game display's container
+			mGameDisplay->GetContainer()->AddComponent(static_pointer_cast<GUIComponent>(mChangeShipLabel), GLVector2f(0.5f, 0.85f));
+			mChangeShipLabel->SetVisible(true); // Make the label visible
+		}
+
 	}
 	mStartLabel->SetVisible(true);
 }
-
 /** Stop the current game. */
 void Asteroids::Stop()
 {
@@ -103,22 +144,34 @@ void Asteroids::Stop()
 
 void Asteroids::OnKeyPressed(uchar key, int x, int y)
 {
-	if (!mGameStarted && key == 'x') {
-		StartGame();
-	}
-	else {
-		// Allow the spaceship to shoot even if the game hasn't started
-		if (key == ' ') {
-			mSpaceship->Shoot();
+	if (!mGameStarted) {
+		if (key == 'x') {
+			StartGame();
+		}
+		else if (key == 's') {
+			mSpaceship->SetSprite(mSpaceshipSprite2);
+			mSpaceship->SetScale(0.1f);
+		}
+		else if (key == 'a') {
+			mSpaceship->SetSprite(mSpaceshipSprite3);
+			mSpaceship->SetScale(0.1f);
+		}
+		else if (key == 'd') {
+			mSpaceship->SetSprite(mSpaceshipSprite1);
+			mSpaceship->SetScale(0.1f);
 		}
 	}
-	switch (key)
-	{
-	case ' ':
-		mSpaceship->Shoot();
-		break;
-	default:
-		break;
+	else {
+		// The game has started, so we ignore spaceship change keys and only respond to gameplay keys
+		switch (key)
+		{
+		case ' ':
+			mSpaceship->Shoot();
+			break;
+			// Add other gameplay-related key cases here if needed
+		default:
+			break;
+		}
 	}
 }
 void Asteroids::StartGame() {
@@ -130,16 +183,21 @@ void Asteroids::StartGame() {
 	// Now, create asteroids and set up the GUI
 	CreateAsteroids(10); // Create 10 asteroids to start
 	CreateGUI(); // Set up the score, lives, and other GUI elements
-
+	mGameWorld->AddObject(CreateHealthPowerUp());
 	// Add scorekeeper and player to the game world
 	mGameWorld->AddListener(&mScoreKeeper);
 	mScoreKeeper.AddListener(shared_ptr<Asteroids>(this));
 	mGameWorld->AddListener(&mPlayer);
 	mPlayer.AddListener(shared_ptr<Asteroids>(this));
-
+	mChangeShipLabel->SetVisible(false);
+	mTitleLabel->SetVisible(false);
+	mStartLabel->SetVisible(false);
 	// Mark the game as started
 	mGameStarted = true;
 }
+
+
+
 void Asteroids::OnKeyReleased(uchar key, int x, int y) {}
 
 void Asteroids::OnSpecialKeyPressed(int key, int x, int y)
@@ -156,7 +214,6 @@ void Asteroids::OnSpecialKeyPressed(int key, int x, int y)
 	default: break;
 	}
 }
-
 void Asteroids::OnSpecialKeyReleased(int key, int x, int y)
 {
 	switch (key)
@@ -187,6 +244,18 @@ void Asteroids::OnObjectRemoved(GameWorld* world, shared_ptr<GameObject> object)
 		if (mAsteroidCount <= 0)
 		{
 			SetTimer(500, START_NEXT_LEVEL);
+		}
+	}
+
+	else if (object->GetType() == GameObjectType("HealthPowerUp")) {
+		
+		if (object->GetType() == GameObjectType("Spaceship")) {
+			// Increment player lives by 2
+			mPlayer.IncrementLives(2);
+		}
+		else if (object->GetType() == GameObjectType("Bullet")) {
+			// Increment player lives by 1
+			mPlayer.IncrementLives(1);
 		}
 	}
 }
@@ -334,6 +403,22 @@ shared_ptr<GameObject> Asteroids::CreateExplosion()
 	explosion->Reset();
 	return explosion;
 }
+shared_ptr<GameObject> Asteroids::CreateHealthPowerUp() {
+	auto healthPowerUp = make_shared<HealthPowerUp>();
+	healthPowerUp->SetPosition(GLVector3f(mGameDisplay->GetWidth() / 2, mGameDisplay->GetHeight() / 2, 0));
+	healthPowerUp->SetVelocity(GLVector3f(0, 0, 0)); // Typically stationary
+	healthPowerUp->SetAcceleration(GLVector3f(0, 0, 0)); // No acceleration
+
+	// Use the preloaded sprite
+	healthPowerUp->SetSprite(mHealthPowerUpSprite);
+	healthPowerUp->SetBoundingShape(make_shared<BoundingSphere>(healthPowerUp, 10.0f));
+	healthPowerUp->SetScale(0.6f);
+	healthPowerUp->Render();
+	mGameWorld->AddObject(healthPowerUp);
+	return healthPowerUp;
+}
+
+
 
 /*void Asteroids::OnKeyPressed(uchar key, int x, int y)
 {
