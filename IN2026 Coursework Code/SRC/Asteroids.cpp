@@ -12,6 +12,7 @@
 #include "GUILabel.h"
 #include "Explosion.h"
 #include "HealthPowerUp.h"
+#include "ThrustPowerUp.h"
 
 // PUBLIC INSTANCE CONSTRUCTORS ///////////////////////////////////////////////
 
@@ -22,6 +23,7 @@ Asteroids::Asteroids(int argc, char* argv[])
 	mLevel = 0;
 	mAsteroidCount = 0;
 	InitializeStartScreen();
+	currentThrust=1.0;
 }
 
 /** Destructor. */
@@ -64,14 +66,16 @@ void Asteroids::Start()
 	Animation* health_anim = AnimationManager::GetInstance().CreateAnimationFromFile("health", 48, 48, 48, 48, "health_fs.png");
 	shared_ptr<Sprite> healthPowerUpSprite = make_shared<Sprite>(health_anim->GetWidth(), health_anim->GetHeight(), health_anim);
 
+	Animation* boost_anim = AnimationManager::GetInstance().CreateAnimationFromFile("boost", 64, 64,64, 64, "boost_fs.png");
+	shared_ptr<Sprite> thrustPowerUpSprite = make_shared<Sprite>(boost_anim->GetWidth(), boost_anim->GetHeight(), boost_anim);
 	// Store it for later use
 	mHealthPowerUpSprite = healthPowerUpSprite;
-
+	mThrustPowerUpSprite = thrustPowerUpSprite;
 
 	// Create a spaceship and add it to the world
 	mGameWorld->AddObject(CreateSpaceship());
-
-	mGameWorld->AddObject(CreateHealthPowerUp());
+	
+	//mGameWorld->AddObject(CreateHealthPowerUp());
 	//shared_ptr<GameObject> healthPowerUp = CreateHealthPowerUp();
 	// Initialize the start screen label and make it visible
 	/*mStartLabel = make_shared<GUILabel>("Press X to Start");
@@ -94,7 +98,7 @@ void Asteroids::InitializeStartScreen() {
 
 		// Retrieve the spaceship's Y position. For now, let's say it's at the bottom 10% of the screen height.
 		float spaceshipYPos = mGameDisplay->GetHeight() * 0.1f;
-		// We want to place the label 40 pixels above the spaceship.
+		//  want to place the label 40 pixels above the spaceship.
 		int labelOffsetY = 40;
 
 		// Calculate the label's X and Y position.
@@ -108,8 +112,11 @@ void Asteroids::InitializeStartScreen() {
 		// Calculate the positions based on the screen height and set the labels accordingly
 		float screenHeight = mGameDisplay->GetHeight();
 
+
+		
+		
 		// Position for "Asteroids The Game" label, which is at the top 10% of the screen height
-		float asteroidsLabelYPos = screenHeight * 0.1f; // Changed from 0.1 to whatever is needed
+		float asteroidsLabelYPos = screenHeight * 0.1f;
 		mTitleLabel = make_shared<GUILabel>("Asteroids The Game"); // Create the title label
 		mTitleLabel->SetPosition(GLVector2i(mGameDisplay->GetWidth() / 2, asteroidsLabelYPos));
 		mTitleLabel->SetHorizontalAlignment(GUIComponent::GUI_HALIGN_CENTER);
@@ -136,6 +143,7 @@ void Asteroids::InitializeStartScreen() {
 /** Stop the current game. */
 void Asteroids::Stop()
 {
+	
 	// Stop the game
 	GameSession::Stop();
 }
@@ -179,11 +187,14 @@ void Asteroids::StartGame() {
 	if (mStartLabel) {
 		mStartLabel->SetVisible(false);
 	}
-
+	mGameOver = false;
 	// Now, create asteroids and set up the GUI
 	CreateAsteroids(10); // Create 10 asteroids to start
 	CreateGUI(); // Set up the score, lives, and other GUI elements
 	mGameWorld->AddObject(CreateHealthPowerUp());
+	mGameWorld->AddObject(CreateThrustPowerUp());
+	SetTimer(15000, SPAWN_HEALTH_POWERUP);
+	SetTimer(50000, SPAWN_THRUST_POWERUP);
 	// Add scorekeeper and player to the game world
 	mGameWorld->AddListener(&mScoreKeeper);
 	mScoreKeeper.AddListener(shared_ptr<Asteroids>(this));
@@ -205,7 +216,7 @@ void Asteroids::OnSpecialKeyPressed(int key, int x, int y)
 	switch (key)
 	{
 		// If up arrow key is pressed start applying forward thrust
-	case GLUT_KEY_UP: mSpaceship->Thrust(10); break;
+	case GLUT_KEY_UP: mSpaceship->Thrust(currentThrust); break;
 		// If left arrow key is pressed start rotating anti-clockwise
 	case GLUT_KEY_LEFT: mSpaceship->Rotate(90); break;
 		// If right arrow key is pressed start rotating clockwise
@@ -246,23 +257,61 @@ void Asteroids::OnObjectRemoved(GameWorld* world, shared_ptr<GameObject> object)
 			SetTimer(500, START_NEXT_LEVEL);
 		}
 	}
+	if (object->GetType() == GameObjectType("HealthPowerUp")) {
+		SetTimer(15000, SPAWN_HEALTH_POWERUP); // Schedule a new Health PowerUp spawn
+	}
+	if (object->GetType() == GameObjectType("ThrustPowerUp")) {
+		currentThrust *= 1.3; // Increase thrust
+		SetTimer(50000, SPAWN_THRUST_POWERUP);
+		SetTimer(15000, END_THRUST_BOOST); // End the boost after 15 seconds
+	}
 }
 
 // PUBLIC INSTANCE METHODS IMPLEMENTING ITimerListener ////////////////////////
 
 void Asteroids::OnTimer(int value)
 {
+	if (value == SPAWN_HEALTH_POWERUP) {
+		// First check if the game is over
+		if (mGameOver) {
+			// If the game is over, do not spawn new health powerups
+			return;
+		}
+
+		// If the game is not over, spawn a new health power-up
+		shared_ptr<GameObject> healthPowerUp = CreateHealthPowerUp();
+		mGameWorld->AddObject(healthPowerUp);
+
+		// Reset the timer to spawn another health power-up after 15 seconds
+		SetTimer(15000, SPAWN_HEALTH_POWERUP);
+	}
+
+	if (value == SPAWN_THRUST_POWERUP) {
+		if (!mGameOver) {
+			shared_ptr<GameObject> thrustPowerUp = CreateThrustPowerUp();
+			mGameWorld->AddObject(thrustPowerUp);
+			SetTimer(50000, SPAWN_THRUST_POWERUP); // Respawn every 50 seconds
+		}
+	}
+	else if (value == END_THRUST_BOOST) {
+		currentThrust = 1.0; // Reset thrust to normal after 15 seconds
+	}
 	if (value == CREATE_NEW_PLAYER)
 	{
-		mSpaceship->Reset();
-		mGameWorld->AddObject(mSpaceship);
+		if (!mGameOver)
+		{
+			mSpaceship->Reset();
+			mGameWorld->AddObject(mSpaceship);
+		}
 	}
 
 	if (value == START_NEXT_LEVEL)
 	{
-		mLevel++;
-		int num_asteroids = 10 + 2 * mLevel;
-		CreateAsteroids(num_asteroids);
+		if (!mGameOver) {
+			mLevel++;
+			int num_asteroids = 10 + 2 * mLevel;
+			CreateAsteroids(num_asteroids);
+		}
 	}
 
 	if (value == SHOW_GAME_OVER)
@@ -376,6 +425,7 @@ void Asteroids::OnPlayerKilled(int lives_left)
 	}
 	else
 	{
+		mGameOver = true;
 		SetTimer(500, SHOW_GAME_OVER);
 	}
 }
@@ -400,7 +450,12 @@ shared_ptr<GameObject> Asteroids::CreateExplosion()
 }
 shared_ptr<GameObject> Asteroids::CreateHealthPowerUp() {
 	auto healthPowerUp = make_shared<HealthPowerUp>();
-	healthPowerUp->SetPosition(GLVector3f(mGameDisplay->GetWidth() / 2, mGameDisplay->GetHeight() / 2, 0));
+	
+
+	float x = static_cast<float>(rand() % mGameDisplay->GetWidth());
+	float y = static_cast<float>(rand() % mGameDisplay->GetHeight());
+	healthPowerUp->SetPosition(GLVector3f(x, y, 0));
+
 	healthPowerUp->SetVelocity(GLVector3f(0, 0, 0)); // Typically stationary
 	healthPowerUp->SetAcceleration(GLVector3f(0, 0, 0)); // No acceleration
 
@@ -411,6 +466,26 @@ shared_ptr<GameObject> Asteroids::CreateHealthPowerUp() {
 	healthPowerUp->Render();
 	mGameWorld->AddObject(healthPowerUp);
 	return healthPowerUp;
+}
+shared_ptr<GameObject> Asteroids::CreateThrustPowerUp() {
+	auto thrustPowerUp = make_shared<ThrustPowerUp>();
+
+	// Set position near the spaceship to ensure it's reachable
+	float x1 = static_cast<float>(rand() % mGameDisplay->GetWidth());
+	float y1 = static_cast<float>(rand() % mGameDisplay->GetHeight());
+	thrustPowerUp->SetPosition(GLVector3f(x1, y1, 0));
+
+	thrustPowerUp->SetVelocity(GLVector3f(0, 0, 0)); // Typically stationary
+	thrustPowerUp->SetAcceleration(GLVector3f(0, 0, 0)); // No acceleration
+
+	// Link to the sprite for visual representation
+	//auto sprite = AnimationManager::GetInstance().GetAnimationByName("boost");
+	thrustPowerUp->SetSprite(mThrustPowerUpSprite);
+	thrustPowerUp->SetBoundingShape(make_shared<BoundingSphere>(thrustPowerUp, 10.0f)); // Adjust the size as needed
+	thrustPowerUp->SetScale(0.1f); // Adjust scaling as needed
+	thrustPowerUp->Render();
+	mGameWorld->AddObject(thrustPowerUp);
+	return thrustPowerUp;
 }
 
 

@@ -20,8 +20,9 @@ public:
 
 	void OnObjectRemoved(GameWorld* world, shared_ptr<GameObject> object)
 	{
+		std::cout << "Object removed: " << object->GetType().GetTypeName() << std::endl;
 		if (object->GetType() == GameObjectType("Spaceship")) {
-			mLives -= 1;
+			mLives -= 0.5;
 			FirePlayerKilled();
 		}
 		if (object->GetType() == GameObjectType("HealthPowerUp")) {

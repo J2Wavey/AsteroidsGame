@@ -3,30 +3,31 @@
 #include "GameWorld.h"
 #include "Spaceship.h"
 
-// Default constructor
-HealthPowerUp::HealthPowerUp()
+// this is the default constructor for the health power up class 
+HealthPowerUp::HealthPowerUp() // initilaizes the power up as a type of game object and is setting a deafult radius for this boundshape 
     : GameObject("HealthPowerUp"), mRadius(1.0f) {
     //SetBoundingShape(make_shared<BoundingSphere>(this, mRadius));
 }
 
 
-// Destructor
+// this is the destructor for the power up class 
 HealthPowerUp::~HealthPowerUp() {
 }
 
-void HealthPowerUp::Update(int dt) {
+void HealthPowerUp::Update(int dt) {// this is the update method for the health power up 
     // Call parent update function
     GameObject::Update(dt);
 }
 
-void HealthPowerUp::Render() {
+void HealthPowerUp::Render() { // this is the render function, which is to draw the health power up
     if (mSprite.get() != NULL) {
         mSprite->Render();
     }
 
-    GameObject::Render();
+    GameObject::Render();// calling the base class render to hndle any further rendering 
 }
-
+// this is the collisontest function which ttests if this health power up has collidied with another object 
+// this function will return true, if the there is collison between the health power, bullet or space ship 
 bool HealthPowerUp::CollisionTest(shared_ptr<GameObject> o)
 {
 
@@ -40,7 +41,7 @@ bool HealthPowerUp::CollisionTest(shared_ptr<GameObject> o)
     return mBoundingShape->CollisionTest(o->GetBoundingShape());
 }
 
-
+// this is used when there is a collision. 
 void HealthPowerUp::OnCollision(const GameObjectList& objects)
 {
    // mWorld->FlagForRemoval(GetThisPtr());

@@ -54,6 +54,7 @@ private:
 	shared_ptr<GUILabel> mLivesLabel;
 	shared_ptr<GUILabel> mGameOverLabel;
 	shared_ptr<Sprite> mHealthPowerUpSprite;
+	shared_ptr<Sprite> mThrustPowerUpSprite;
 
 	uint mLevel;
 	uint mAsteroidCount;
@@ -65,12 +66,17 @@ private:
 	//void CreateHealthPowerUp();
 	shared_ptr<GameObject> CreateExplosion();
 	shared_ptr<GameObject> CreateHealthPowerUp();
+	shared_ptr<GameObject> CreateThrustPowerUp();
 
 	const static uint SHOW_GAME_OVER = 0;
 	const static uint START_NEXT_LEVEL = 1;
 	const static uint CREATE_NEW_PLAYER = 2;
-
+	const static uint SPAWN_HEALTH_POWERUP = 3;
+	const static uint SPAWN_THRUST_POWERUP = 3; // Timer ID for spawning thrust power-ups
+	const static uint END_THRUST_BOOST = 4;     // Timer ID for ending the thrust boost
 	bool mGameStarted;
+	bool mGameOver;
+
 	shared_ptr<GUILabel> mStartLabel;
 	shared_ptr<GUILabel> mTitleLabel;
 	shared_ptr<GUILabel> mChangeShipLabel;
@@ -83,6 +89,7 @@ private:
 
 	void InitializeStartScreen();
 	void StartGame();
+	float currentThrust;
 
 	ScoreKeeper mScoreKeeper;
 	Player mPlayer;
