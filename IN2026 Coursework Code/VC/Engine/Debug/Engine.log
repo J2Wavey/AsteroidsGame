@@ -1,0 +1,27 @@
+﻿cl : command line  warning D9035: option 'Gm' has been deprecated and will be removed in a future release
+  TextureManager.cpp
+  Texture.cpp
+  Sprite.cpp
+  MovementController.cpp
+  ImageManager.cpp
+  Image.cpp
+  GlutWindow.cpp
+  GlutSession.cpp
+  GameWorld.cpp
+  GameWindow.cpp
+  GameSession.cpp
+  GameObject.cpp
+  GameDisplay.cpp
+  GUILabel.cpp
+  GUIIcon.cpp
+  GUIContainer.cpp
+  GUIComponent.cpp
+  GLVector.cpp
+  Shape.cpp
+  GameObjectType.cpp
+  Generating Code...
+  Compiling...
+  AnimationManager.cpp
+  Animation.cpp
+  Generating Code...
+  Engine.vcxproj -> E:\AsteroidsGame\IN2026 Coursework Code\lib\Engine.lib
