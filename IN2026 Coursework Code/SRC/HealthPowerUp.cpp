@@ -43,5 +43,5 @@ bool HealthPowerUp::CollisionTest(shared_ptr<GameObject> o)
 
 void HealthPowerUp::OnCollision(const GameObjectList& objects)
 {
-    mWorld->FlagForRemoval(GetThisPtr());
+   // mWorld->FlagForRemoval(GetThisPtr());
 }
