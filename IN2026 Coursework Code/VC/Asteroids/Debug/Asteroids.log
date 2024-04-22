@@ -1,12 +1,5 @@
 ﻿cl : command line  warning D9035: option 'Gm' has been deprecated and will be removed in a future release
-  main.cpp
-  Spaceship.cpp
-  Bullet.cpp
-  Asteroids.cpp
   HealthPowerUp.cpp
-  Explosion.cpp
-  Asteroid.cpp
-  Generating Code...
 Asteroid.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
   Asteroids.vcxproj -> E:\AsteroidsGame\IN2026 Coursework Code\bin\Asteroids.exe
   ..\..\assets\asteroid.shape
