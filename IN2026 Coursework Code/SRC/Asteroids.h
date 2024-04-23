@@ -9,7 +9,7 @@
 #include "ScoreKeeper.h"
 #include "Player.h"
 #include "IPlayerListener.h"
-
+#include "Image.h"
 class GameObject;
 class Spaceship;
 class GUILabel;
@@ -55,7 +55,8 @@ private:
 	shared_ptr<GUILabel> mGameOverLabel;
 	shared_ptr<Sprite> mHealthPowerUpSprite;
 	shared_ptr<Sprite> mThrustPowerUpSprite;
-
+	shared_ptr<Sprite> mDestroyAllPowerUpSprite;
+	shared_ptr<Sprite> mSuperPowerUpSprite;
 	uint mLevel;
 	uint mAsteroidCount;
 
@@ -67,13 +68,16 @@ private:
 	shared_ptr<GameObject> CreateExplosion();
 	shared_ptr<GameObject> CreateHealthPowerUp();
 	shared_ptr<GameObject> CreateThrustPowerUp();
-
+	shared_ptr<GameObject> CreateDestroyAllPowerUp();
+	shared_ptr<GameObject> Asteroids::CreateSuperPowerUp();
 	const static uint SHOW_GAME_OVER = 0;
 	const static uint START_NEXT_LEVEL = 1;
 	const static uint CREATE_NEW_PLAYER = 2;
 	const static uint SPAWN_HEALTH_POWERUP = 3;
 	const static uint SPAWN_THRUST_POWERUP = 3; // Timer ID for spawning thrust power-ups
-	const static uint END_THRUST_BOOST = 4;     // Timer ID for ending the thrust boost
+	const static uint END_THRUST_BOOST = 4;  
+	const static uint SPAWN_DESTROY_ALL_POWERUP = 5;// Timer ID for ending the thrust boost
+	const static uint SPAWN_SUPER_POWERUP = 6;
 	bool mGameStarted;
 	bool mGameOver;
 
@@ -86,6 +90,7 @@ private:
 	shared_ptr<Sprite> mSpaceshipSprite2;
 	shared_ptr<Sprite> mSpaceshipSprite3;
 
+	//void InitializePowerUpSprites();
 
 	void InitializeStartScreen();
 	void StartGame();

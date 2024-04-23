@@ -13,6 +13,8 @@
 #include "Explosion.h"
 #include "HealthPowerUp.h"
 #include "ThrustPowerUp.h"
+#include "DestroyAllPowerUp.h"
+#include "SuperPowerUp.h"
 
 // PUBLIC INSTANCE CONSTRUCTORS ///////////////////////////////////////////////
 
@@ -24,6 +26,10 @@ Asteroids::Asteroids(int argc, char* argv[])
 	mAsteroidCount = 0;
 	InitializeStartScreen();
 	currentThrust=1.0;
+
+
+	
+	
 }
 
 /** Destructor. */
@@ -68,9 +74,23 @@ void Asteroids::Start()
 
 	Animation* boost_anim = AnimationManager::GetInstance().CreateAnimationFromFile("boost", 64, 64,64, 64, "boost_fs.png");
 	shared_ptr<Sprite> thrustPowerUpSprite = make_shared<Sprite>(boost_anim->GetWidth(), boost_anim->GetHeight(), boost_anim);
+
+	Animation* destroy_anim = AnimationManager::GetInstance().CreateAnimationFromFile("destroy", 64, 64, 64, 64, "destroy_fs.png");
+	shared_ptr<Sprite> destroyAllPowerUpSprite = make_shared<Sprite>(destroy_anim->GetWidth(), destroy_anim->GetHeight(), destroy_anim);
+
+	Animation* super_anim = AnimationManager::GetInstance().CreateAnimationFromFile("super", 64, 64, 64, 64, "question_fs.png");
+	shared_ptr<Sprite> superPowerUpSprite = make_shared<Sprite>(super_anim->GetWidth(), super_anim->GetHeight(), super_anim);
+
+
+
 	// Store it for later use
 	mHealthPowerUpSprite = healthPowerUpSprite;
 	mThrustPowerUpSprite = thrustPowerUpSprite;
+	mDestroyAllPowerUpSprite = destroyAllPowerUpSprite;
+	mSuperPowerUpSprite = superPowerUpSprite;
+
+
+
 
 	// Create a spaceship and add it to the world
 	mGameWorld->AddObject(CreateSpaceship());
@@ -90,6 +110,7 @@ void Asteroids::Start()
 	// Start the game session
 	GameSession::Start();
 }
+
 void Asteroids::InitializeStartScreen() {
 	if (!mStartLabel) { // Only create the start label if it hasn't been created already
 		mStartLabel = make_shared<GUILabel>("Press X to Start");
@@ -189,12 +210,14 @@ void Asteroids::StartGame() {
 	}
 	mGameOver = false;
 	// Now, create asteroids and set up the GUI
-	CreateAsteroids(10); // Create 10 asteroids to start
+	CreateAsteroids(4); // Create 10 asteroids to start
 	CreateGUI(); // Set up the score, lives, and other GUI elements
 	mGameWorld->AddObject(CreateHealthPowerUp());
 	mGameWorld->AddObject(CreateThrustPowerUp());
-	SetTimer(15000, SPAWN_HEALTH_POWERUP);
-	SetTimer(50000, SPAWN_THRUST_POWERUP);
+	mGameWorld->AddObject(CreateDestroyAllPowerUp());
+	mGameWorld->AddObject(CreateSuperPowerUp());
+	//SetTimer(15000, SPAWN_HEALTH_POWERUP);
+	//SetTimer(50000, SPAWN_THRUST_POWERUP);
 	// Add scorekeeper and player to the game world
 	mGameWorld->AddListener(&mScoreKeeper);
 	mScoreKeeper.AddListener(shared_ptr<Asteroids>(this));
@@ -254,18 +277,32 @@ void Asteroids::OnObjectRemoved(GameWorld* world, shared_ptr<GameObject> object)
 		mAsteroidCount--;
 		if (mAsteroidCount <= 0)
 		{
-			SetTimer(500, START_NEXT_LEVEL);
+			SetTimer(1500, START_NEXT_LEVEL);
 		}
 	}
 	if (object->GetType() == GameObjectType("HealthPowerUp")) {
-		SetTimer(15000, SPAWN_HEALTH_POWERUP); // Schedule a new Health PowerUp spawn
+		if (!mGameOver) SetTimer(20000, SPAWN_HEALTH_POWERUP); // Schedule a new Health PowerUp spawn
 	}
 	if (object->GetType() == GameObjectType("ThrustPowerUp")) {
 		currentThrust *= 1.3; // Increase thrust
-		SetTimer(50000, SPAWN_THRUST_POWERUP);
-		SetTimer(15000, END_THRUST_BOOST); // End the boost after 15 seconds
+		if (!mGameOver) {
+			SetTimer(50000, SPAWN_THRUST_POWERUP);
+			SetTimer(15000, END_THRUST_BOOST); // End the boost after 15 seconds
+		}
 	}
-}
+	if (object->GetType() == GameObjectType("DestroyAllPowerUp")) {
+		// Destroy all asteroids
+		world->RemoveAllAsteroids();
+		if (!mGameOver) SetTimer(60000, SPAWN_DESTROY_ALL_POWERUP);
+	}
+	if (object->GetType() == GameObjectType("SuperPowerUp")) {
+
+		if (!mGameOver) SetTimer(70000, SPAWN_SUPER_POWERUP);
+		}
+	}
+
+
+
 
 // PUBLIC INSTANCE METHODS IMPLEMENTING ITimerListener ////////////////////////
 
@@ -283,14 +320,27 @@ void Asteroids::OnTimer(int value)
 		mGameWorld->AddObject(healthPowerUp);
 
 		// Reset the timer to spawn another health power-up after 15 seconds
-		SetTimer(15000, SPAWN_HEALTH_POWERUP);
+		//SetTimer(15000, SPAWN_HEALTH_POWERUP);
 	}
-
+	if (value == SPAWN_DESTROY_ALL_POWERUP) {
+		if (!mGameOver) {
+			shared_ptr<GameObject> destroyAllPowerUp =CreateDestroyAllPowerUp();
+			mGameWorld->AddObject(destroyAllPowerUp);
+			//SetTimer(50000, SPAWN_THRUST_POWERUP); // Respawn every 50 seconds
+		}
+	}
+	if (value == SPAWN_SUPER_POWERUP) {
+		if (!mGameOver) {
+			shared_ptr<GameObject> superPowerUp = CreateSuperPowerUp();
+			mGameWorld->AddObject(superPowerUp);
+			//SetTimer(50000, SPAWN_THRUST_POWERUP); // Respawn every 50 seconds
+		}
+	}
 	if (value == SPAWN_THRUST_POWERUP) {
 		if (!mGameOver) {
 			shared_ptr<GameObject> thrustPowerUp = CreateThrustPowerUp();
 			mGameWorld->AddObject(thrustPowerUp);
-			SetTimer(50000, SPAWN_THRUST_POWERUP); // Respawn every 50 seconds
+			//SetTimer(50000, SPAWN_THRUST_POWERUP); // Respawn every 50 seconds
 		}
 	}
 	else if (value == END_THRUST_BOOST) {
@@ -461,7 +511,7 @@ shared_ptr<GameObject> Asteroids::CreateHealthPowerUp() {
 
 	// Use the preloaded sprite
 	healthPowerUp->SetSprite(mHealthPowerUpSprite);
-	healthPowerUp->SetBoundingShape(make_shared<BoundingSphere>(healthPowerUp, 10.0f));
+	healthPowerUp->SetBoundingShape(make_shared<BoundingSphere>(healthPowerUp, 5.0f));
 	healthPowerUp->SetScale(0.1f);
 	healthPowerUp->Render();
 	mGameWorld->AddObject(healthPowerUp);
@@ -471,23 +521,53 @@ shared_ptr<GameObject> Asteroids::CreateThrustPowerUp() {
 	auto thrustPowerUp = make_shared<ThrustPowerUp>();
 
 	// Set position near the spaceship to ensure it's reachable
-	float x1 = static_cast<float>(rand() % mGameDisplay->GetWidth());
+float x1 = static_cast<float>(rand() % mGameDisplay->GetWidth());
 	float y1 = static_cast<float>(rand() % mGameDisplay->GetHeight());
 	thrustPowerUp->SetPosition(GLVector3f(x1, y1, 0));
 
-	thrustPowerUp->SetVelocity(GLVector3f(0, 0, 0)); // Typically stationary
+thrustPowerUp->SetVelocity(GLVector3f(0, 0, 0)); // Typically stationary
 	thrustPowerUp->SetAcceleration(GLVector3f(0, 0, 0)); // No acceleration
 
 	// Link to the sprite for visual representation
 	//auto sprite = AnimationManager::GetInstance().GetAnimationByName("boost");
 	thrustPowerUp->SetSprite(mThrustPowerUpSprite);
-	thrustPowerUp->SetBoundingShape(make_shared<BoundingSphere>(thrustPowerUp, 10.0f)); // Adjust the size as needed
-	thrustPowerUp->SetScale(0.1f); // Adjust scaling as needed
+	thrustPowerUp->SetBoundingShape(make_shared<BoundingSphere>(thrustPowerUp, 5.0f)); // Adjust the size as needed
+thrustPowerUp->SetScale(0.1f); // Adjust scaling as needed
 	thrustPowerUp->Render();
 	mGameWorld->AddObject(thrustPowerUp);
 	return thrustPowerUp;
 }
 
+shared_ptr<GameObject> Asteroids::CreateDestroyAllPowerUp() {
+	auto destroyAllPowerUp = make_shared<DestroyAllPowerUp>();
+
+	float x = static_cast<float>(rand() % mGameDisplay->GetWidth());
+	float y = static_cast<float>(rand() % mGameDisplay->GetHeight());
+	destroyAllPowerUp->SetPosition(GLVector3f(x, y, 0));
+
+	//auto sprite = AnimationManager::GetInstance().GetAnimationByName("destroy_all");
+	destroyAllPowerUp->SetSprite(mDestroyAllPowerUpSprite);
+	destroyAllPowerUp->SetBoundingShape(make_shared<BoundingSphere>(destroyAllPowerUp, 5.0f));
+	destroyAllPowerUp->SetScale(0.1f);
+	destroyAllPowerUp->Render();
+	mGameWorld->AddObject(destroyAllPowerUp);
+	return destroyAllPowerUp;
+}
+shared_ptr<GameObject> Asteroids::CreateSuperPowerUp() {
+	auto superPowerUp = make_shared<SuperPowerUp>();
+
+	float x = static_cast<float>(rand() % mGameDisplay->GetWidth());
+	float y = static_cast<float>(rand() % mGameDisplay->GetHeight());
+	superPowerUp->SetPosition(GLVector3f(x, y, 0));
+
+	//auto sprite = AnimationManager::GetInstance().GetAnimationByName("destroy_all");
+	superPowerUp->SetSprite(mSuperPowerUpSprite);
+	superPowerUp->SetBoundingShape(make_shared<BoundingSphere>(superPowerUp, 5.0f));
+	superPowerUp->SetScale(0.1f);
+	superPowerUp->Render();
+	mGameWorld->AddObject(superPowerUp);
+	return superPowerUp;
+}
 
 
 

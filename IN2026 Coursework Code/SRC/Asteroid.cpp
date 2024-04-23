@@ -6,19 +6,30 @@
 Asteroid::Asteroid(void) : GameObject("Asteroid")
 {
 	mAngle = rand() % 360;
-	mRotation = 0; // rand() % 90;
+	mRotation =  0;
 	mPosition.x = rand() / 2;
 	mPosition.y = rand() / 2;
 	mPosition.z = 0.0;
-	mVelocity.x = 10.0 * cos(DEG2RAD*mAngle);
+	mVelocity.x = -1.0 * cos(DEG2RAD*mAngle);
 	mVelocity.y = 10.0 * sin(DEG2RAD*mAngle);
 	mVelocity.z = 0.0;
+	
 }
 
 Asteroid::~Asteroid(void)
 {
 }
-
+//bool Asteroid::shouldSlowDown = false;
+void Asteroid::SlowDown(float factor) {
+	mVelocity.x *= factor;
+	mVelocity.y *= factor;
+	mRotation *= factor;
+}
+/*void Asteroid::Update(int j) {
+	if (shouldSlowDown) {
+		SlowDown(0.4f);
+	}
+}*/
 bool Asteroid::CollisionTest(shared_ptr<GameObject> o)
 {
 	if (o->GetType() == GameObjectType("Asteroid") || o->GetType() == GameObjectType("HealthPowerUp")) return false;

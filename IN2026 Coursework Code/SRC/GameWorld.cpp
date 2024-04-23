@@ -198,7 +198,16 @@ void GameWorld::UpdateCollisions(int t)
 		if (!collisions.empty()) object->OnCollision(collisions);
 	}
 }
-
+void GameWorld::RemoveAllAsteroids() {
+	// Note: Create a copy of the mGameObjects list to iterate over
+	// because removing objects will modify the list during iteration.
+	auto gameObjectsCopy = mGameObjects;
+	for (auto& object : gameObjectsCopy) {
+		if (object->GetType() == GameObjectType("Asteroid")) {
+			FlagForRemoval(object);
+		}
+	}
+}
 /** Utility method to wrap positions around the world's edges. */
 void GameWorld::WrapXY(GLfloat &x, GLfloat &y)
 {

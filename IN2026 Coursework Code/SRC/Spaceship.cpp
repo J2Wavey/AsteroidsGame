@@ -11,7 +11,9 @@ using namespace std;
 
 /**  Default constructor. */
 Spaceship::Spaceship()
-	: GameObject("Spaceship"), mThrust(0)
+	: GameObject("Spaceship"), mThrust(0),
+	mDoubleShotEnabled(false)
+
 {
 }
 
@@ -23,7 +25,8 @@ Spaceship::Spaceship(GLVector3f p, GLVector3f v, GLVector3f a, GLfloat h, GLfloa
 
 /** Copy constructor. */
 Spaceship::Spaceship(const Spaceship& s)
-	: GameObject(s), mThrust(0)
+	: GameObject(s), mThrust(0),
+	mDoubleShotEnabled(s.mDoubleShotEnabled)
 {
 }
 
@@ -36,8 +39,7 @@ Spaceship::~Spaceship(void)
 
 /** Update this spaceship. */
 void Spaceship::Update(int t)
-{
-	// Call parent update function
+{	// Call parent update function
 	GameObject::Update(t);
 }
 
@@ -68,14 +70,35 @@ void Spaceship::Rotate(float r)
 {
 	mRotation = r;
 }
-
+void Spaceship::EnableDoubleShot(bool enable) {
+	mDoubleShotEnabled = enable;
+}
 /** Shoot a bullet. */
 void Spaceship::Shoot(void)
 {
-	// Check the world exists
+	// Heading vector in the direction the spaceship is pointed
+	GLVector3f spaceship_heading(cos(DEG2RAD * mAngle), sin(DEG2RAD * mAngle), 0);
+	spaceship_heading.normalize();
+
+	// Position for the first bullet is directly in front of the spaceship
+	GLVector3f bullet_position = mPosition + spaceship_heading * 4;
+	FireBullet(bullet_position, mVelocity);
+
+	if (mDoubleShotEnabled) {
+		// Offset is perpendicular to the spaceship heading
+		GLVector3f offset(-sin(DEG2RAD * mAngle), cos(DEG2RAD * mAngle), 0);
+		float gap = 7.0f; // Determines the gap between the bullets
+
+		// Calculate position for the second bullet with the offset
+		GLVector3f bullet_position2 = mPosition + spaceship_heading * 4 + offset * gap;
+		FireBullet(bullet_position2, mVelocity);
+	}
+
+}
+void Spaceship::FireBullet(GLVector3f position, GLVector3f velocity) {
 	if (!mWorld) return;
 	// Construct a unit length vector in the direction the spaceship is headed
-	GLVector3f spaceship_heading(cos(DEG2RAD*mAngle), sin(DEG2RAD*mAngle), 0);
+	GLVector3f spaceship_heading(cos(DEG2RAD * mAngle), sin(DEG2RAD * mAngle), 0);
 	spaceship_heading.normalize();
 	// Calculate the point at the node of the spaceship from position and heading
 	GLVector3f bullet_position = mPosition + (spaceship_heading * 4);
@@ -85,14 +108,12 @@ void Spaceship::Shoot(void)
 	GLVector3f bullet_velocity = mVelocity + spaceship_heading * bullet_speed;
 	// Construct a new bullet
 	shared_ptr<GameObject> bullet
-		(new Bullet(bullet_position, bullet_velocity, mAcceleration, mAngle, 0, 2000));
+	(new Bullet(bullet_position, bullet_velocity, mAcceleration, mAngle, 0, 2000));
 	bullet->SetBoundingShape(make_shared<BoundingSphere>(bullet->GetThisPtr(), 2.0f));
 	bullet->SetShape(mBulletShape);
 	// Add the new bullet to the game world
 	mWorld->AddObject(bullet);
-
 }
-
 bool Spaceship::CollisionTest(shared_ptr<GameObject> o)
 {
 	if (o->GetType() != GameObjectType("Asteroid")) return false;

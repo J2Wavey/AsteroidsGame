@@ -45,7 +45,7 @@ public:
 
 	void SetHeight(int h) { mHeight = h; }
 	int GetHeight() { return mHeight; }
-
+	void RemoveAllAsteroids();
 	void WrapXY(float &x, float &y);
 
 protected:
