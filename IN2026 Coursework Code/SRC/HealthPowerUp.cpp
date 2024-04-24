@@ -30,7 +30,6 @@ void HealthPowerUp::Render() { // this is the render function, which is to draw 
 // this function will return true, if the there is collison between the health power, bullet or space ship 
 bool HealthPowerUp::CollisionTest(shared_ptr<GameObject> o)
 {
-
     // Check if the 'other' object is a Spaceship or Bullet, not an Asteroid
     if (o->GetType() == GameObjectType("Asteroid")) return false; // Ignore collision with Asteroids
     if (o->GetType() != GameObjectType("Spaceship") && o->GetType() != GameObjectType("Bullet")) return false; // Only care about Spaceship and Bullet

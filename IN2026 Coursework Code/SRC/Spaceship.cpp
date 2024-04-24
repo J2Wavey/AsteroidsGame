@@ -74,7 +74,7 @@ void Spaceship::EnableDoubleShot(bool enable) {
 	mDoubleShotEnabled = enable;
 }
 /** Shoot a bullet. */
-void Spaceship::Shoot(void)
+void Spaceship::Shoot(void) // decided not to be used for the double shoot functionality 
 {
 	// Heading vector in the direction the spaceship is pointed
 	GLVector3f spaceship_heading(cos(DEG2RAD * mAngle), sin(DEG2RAD * mAngle), 0);

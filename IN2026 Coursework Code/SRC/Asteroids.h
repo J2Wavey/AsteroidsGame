@@ -82,7 +82,7 @@ private:
 	bool mGameOver;
 
 	shared_ptr<GUILabel> mStartLabel;
-	shared_ptr<GUILabel> mTitleLabel;
+	shared_ptr<GUILabel> mLabelForTitle;
 	shared_ptr<GUILabel> mChangeShipLabel;
 
 	// Inside the Asteroids class definition
@@ -96,6 +96,10 @@ private:
 	void StartGame();
 	float currentThrust;
 
+	bool healthPowerUpActive;
+	bool thrustPowerUpActive;
+	bool destroyAllPowerUpActive;
+	bool superPowerUpActive;
 	ScoreKeeper mScoreKeeper;
 	Player mPlayer;
 };

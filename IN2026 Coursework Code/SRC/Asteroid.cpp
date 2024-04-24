@@ -33,7 +33,7 @@ void Asteroid::SlowDown(float factor) {
 bool Asteroid::CollisionTest(shared_ptr<GameObject> o)
 {
 	if (o->GetType() == GameObjectType("Asteroid") || o->GetType() == GameObjectType("HealthPowerUp")) return false;
-	if (o->GetType() != GameObjectType("Spaceship") && o->GetType() != GameObjectType("Bullet")) return false; // Only care about Spaceship and Bullet
+	if (o->GetType() != GameObjectType("Spaceship") && o->GetType() != GameObjectType("Bullet")) return false; // only care about Spaceship and Bullet in terms of detection of collisions
 	if (mBoundingShape.get() == NULL) return false;
 	if (o->GetBoundingShape().get() == NULL) return false;
 	return mBoundingShape->CollisionTest(o->GetBoundingShape());
