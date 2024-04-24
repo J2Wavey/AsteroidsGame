@@ -29,7 +29,7 @@ public:
 
 	const GameObjectType& GetType() const { return mType; }
 
-	void SetWorld(GameWorld *w) { mWorld = w; }
+	 void SetWorld(GameWorld *w) { mWorld = w; }
 	GameWorld* GetWorld() { return mWorld; }
 
 	void SetAngle(GLfloat a) { mAngle = a; }
